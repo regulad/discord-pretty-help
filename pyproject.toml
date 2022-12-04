@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "discord-pretty-help"
-version = "1.3.4"
+version = "2.0.0"
 description = "And nicer looking interactive help menu for discord.py"
 authors = ["StroupBSlayen <29642143+stroupbslayen@users.noreply.github.com>"]
 readme = "README.md"
@@ -12,16 +12,16 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.8"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-"discord.py" = "^1.5.1"
-black = {version = "^20.8b1", allow-prereleases = true}
-python-dotenv = "^0.15.0"
+"discord.py" = "^2"
+black = "^22"
+python-dotenv = "*"
 
 [tool.poetry.scripts]
-test = "tests.test_discord_pretty_help:run"
+run = "tests.test_pretty_help:run"
+emoji = "tests.test_pretty_help:run_emoji"
 
 [build-system]
 requires = ["poetry>=0.12"]

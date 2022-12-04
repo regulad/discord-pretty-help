@@ -1,30 +1,18 @@
-__all__ = ["DefaultMenu", "PrettyMenu"]
+import contextlib
+
+__all__ = ["EmojiMenu"]
 
 import asyncio
 import re
-from abc import ABCMeta
 from typing import List
 
 import discord
 from discord.ext import commands
 
-
-class PrettyMenu(metaclass=ABCMeta):
-    """
-    A base class for menus used with PrettyHelp
-    """
-
-    async def send_pages(
-        self,
-        ctx: commands.Context,
-        destination: discord.abc.Messageable,
-        pages: List[discord.Embed],
-    ):
-        """The function called by :class:`PrettyHelp` that will send pages"""
-        pass
+from .abc_menu import PrettyMenu
 
 
-class DefaultMenu(PrettyMenu):
+class EmojiMenu(PrettyMenu):
     """The default navigation menu for PrettyHelp.
 
     Accepts standard emojis in multiple ways:
@@ -98,7 +86,7 @@ class DefaultMenu(PrettyMenu):
         return self._dict.__iter__()
 
     def __repr__(self) -> str:
-        return f"<DefaultMenu left:{self.page_left} right:{self.page_right} remove:{self.remove}>"
+        return f"<EmojiMenu left:{self.page_left} right:{self.page_right} remove:{self.remove}>"
 
     async def send_pages(
         self,
@@ -107,6 +95,13 @@ class DefaultMenu(PrettyMenu):
         pages: List[discord.Embed],
     ):
         total = len(pages)
+
+        # this is a quick way to make the emoji menu appear to work correctly when called as an app command
+        # otherwise the interaction will error
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
+            await ctx.interaction.delete_original_response()
+
         message: discord.Message = await destination.send(embed=pages[0])
 
         if total > 1:
@@ -150,12 +145,10 @@ class DefaultMenu(PrettyMenu):
 
                             await message.edit(embed=embed)
 
-                    try:
+                    with contextlib.suppress(discord.errors.Forbidden):
                         await message.remove_reaction(
                             payload.emoji, discord.Object(id=payload.user_id)
                         )
-                    except discord.errors.Forbidden:
-                        pass
 
                 except asyncio.TimeoutError:
                     navigating = False
@@ -163,7 +156,5 @@ class DefaultMenu(PrettyMenu):
                         await message.delete()
                     else:
                         for emoji in self:
-                            try:
+                            with contextlib.suppress(Exception):
                                 await message.remove_reaction(emoji, bot.user)
-                            except Exception:
-                                pass
